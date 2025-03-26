@@ -16,15 +16,11 @@ platforms: # the platforms this rock should be built on and run on
 
 parts:
     pytest:
-        plugin: python
-        source: .
-        python-packages:
-          - pytest
-        stage-packages:
-          - python3-venv
-
-    basefile:
         plugin: nil
         stage-packages:
-          - base-files_base
-          - coreutils_env
+          - base-files
+          - python3.12
+          # - coreutils
+        override-build: |
+          ln -sf /usr/bin/python3.12 ${CRAFT_PART_INSTALL}/usr/bin/python3
+          pip3 install --upgrade -t ${CRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ --break-system-packages pytest
