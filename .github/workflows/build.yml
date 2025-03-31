@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat/*
 
 jobs:
   prepare-build:
@@ -85,4 +86,6 @@ jobs:
           command: "python3 -c \"import pytest;print(pytest.__version__)\""
           expected-version: ${{ steps.pytest-version.outputs.pytest-version }}
 
-      - run: skopeo copy --multi-arch all oci-archive:pytest-rock docker://ghcr.io/rockcrafters/pytest-rock/pytest:${{ steps.pytest-version.outputs.pytest-version }}
+      - name: 'Push image to GitHub Container Registry'
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: skopeo copy --multi-arch all oci-archive:pytest-rock docker://ghcr.io/rockcrafters/pytest-rock/pytest:${{ steps.pytest-version.outputs.pytest-version }}
