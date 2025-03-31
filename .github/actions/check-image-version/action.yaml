@@ -1,0 +1,41 @@
+name: Check the image's version
+description: 'Checks if the version of the image matches the expected version'
+
+# This callable workflow checks if the workflow is triggered by
+# a code owner or an image maintainer by testing the github.actor
+# variable against the CODEOWNERS file and the contacts.yaml file
+# under oci/* path
+
+inputs:
+  image-name:
+    description: 'The image from which the version is to be extracted'
+    required: true
+  command:
+    description: 'The command to extract version from the image'
+    required: true
+  expected-version:
+    description: 'The expected version of the image'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get the app version of the image
+      id: image-app-version
+      shell: bash
+      run: |
+        # Parse the command to extract the entrypoint and the arguments
+        IFS=' ' read -r entrypoint args <<< ${{ inputs.command }}
+        version=$(docker run --rm --entrypoint $entrypoint ${{ inputs.image-name }} $args)
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "The version of the image ${{ inputs.image-name }} is: $version"
+
+    - name: Verify the image version
+      shell: bash
+      run: |
+        if [ "${{ steps.image-app-version.outputs.version }}" != "${{ inputs.expected-version }}" ]; then
+          echo -e "The version of the image ${{ inputs.image-name }} is not as expected.\nExpected: ${{ inputs.expected-version }}\nFound: ${{ steps.image-app-version.outputs.version }}"
+          exit 1
+        else
+          echo "The version of the image ${{ inputs.image-name }} is as expected: ${{ inputs.expected-version }}"
+        fi
