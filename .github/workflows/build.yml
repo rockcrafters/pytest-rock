@@ -35,6 +35,10 @@ jobs:
             echo "ERR: can only build 1 image at a time, but trying to trigger ${img_path}"
             exit 1
           fi
+          if [ -z "${img_path}" ]
+          then
+            img_path="24.04-baseless"
+          fi
           test -d "${img_path}"
 
           echo "img-version=$(echo "${img_path}" | cut -d '/' -f 1)" >> "$GITHUB_OUTPUT"
@@ -78,6 +82,8 @@ jobs:
         id: 'pytest-version'
         run: |
           echo "pytest-version=$(docker run --rm pytest:latest exec python3 -c "import pytest;print(pytest.__version__)")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
 
       - name: 'Verify image app version'
         uses: ./.github/actions/check-image-version
